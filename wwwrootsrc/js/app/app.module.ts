@@ -4,13 +4,11 @@ import { FormsModule } from '@angular/forms';
 
 import '../../css/styles.scss';
 
-import { AppComponent, AppHeaderComponent, ColorListComponent,
-	ColorFormComponent, ColorItemComponent, EditColorItemComponent } from './app.component';
+import { AppComponent, JsLogger, EmailValidatorDirective } from './app.component';
 
 @NgModule({
 	imports: [ BrowserModule, FormsModule ],
-	declarations: [ AppComponent, AppHeaderComponent, ColorListComponent,
-		ColorFormComponent, ColorItemComponent, EditColorItemComponent ],
+	declarations: [ AppComponent, JsLogger, EmailValidatorDirective ],
 	bootstrap: [ AppComponent ]
 })
 export class AppModule { }
