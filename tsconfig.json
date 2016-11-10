@@ -15,7 +15,8 @@
 		"suppressImplicitAnyIndexErrors": true
 	},
 	"exclude": [
-		"node_modules"
+		"node_modules",
+		"wwwrootsrc/demos"
 	],
 	"filesGlob": [
 		"./src/js/**/*.ts",
