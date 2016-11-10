@@ -1,114 +1,120 @@
-import { Component, Directive, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
-import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
+import { Component, Injectable } from '@angular/core';
+import { Http, RequestOptions, Headers } from '@angular/http';
 
-const emailValidator = (fc: FormControl) : any => {
+import { Observable, Observer } from 'rxjs';
 
-	if (fc.value == null || String(fc.value).length === 0) {
-		return null;
+import 'rxjs';
+
+interface Widget {
+	id: number,
+	name: string,
+	description: string,
+	color: string,
+	size: string,
+	quantity: number,
+	price: number
+}
+
+@Injectable()
+export class Counter {
+
+	private ws: WebSocket;
+
+	constructor() {
+		
+		this.ws = new WebSocket('ws://localhost:3030');
+
+	} 
+
+	getCounter() : Observable<number> {
+
+		return Observable.create((observer: Observer<number>) => {
+
+			this.ws.addEventListener('message', function(message) {
+				observer.next(parseInt(message.data, 10));
+			});
+
+		});
+
 	}
 
-  const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+}
 
-	if ( !re.test(fc.value) ) {
-		return {
-			email:false
-		};
+
+@Injectable()
+export class Cars {
+
+	constructor(private http: Http) { }
+
+	private makes: string[] = ['Ford','Chevrolet','Tesla','Nissan','Toyota','Audi'];
+
+	getAllMakes() {
+		return this.makes;
 	}
 
-	return null;
-};
+	addMake(newMake: string) {
+		this.makes.push(newMake);
+	}
 
-const makeValidator = (fc: FormControl) : Promise<{ [key: string]: any }> => {
+	// getAll() : Promise<Widget[]> {
+	// 	return this.http.get('/widgets').map(res => res.json()).toPromise<Widget[]>();
+	// }
 
-	const makes: string[] = [
-		'Ford','Chevrolet','Nissan','Toyota','Kia'
-	];
-
-	return new Promise<{ [key: string]: any }>((resolve, reject) => {
-
-		setTimeout(function() {
-
-			if (makes.filter(m => m === fc.value).length === 0) {
-				console.log('invalid');
-				resolve({
-					makeExists: false
-				});
-			} else {
-				console.log('valid');
-				resolve(null);
-			}
+	getAll() : Observable<Widget[]> {
+		return this.http.get('/widgets').map(res => res.json());
+	}
 
 
-		}, 1000);
+	insert(widget: Widget) : Promise<Widget> {
 
+		const headers = new Headers({
+			'Content-Type': 'application/json'
+		});
 
-	});
+		const requestOptions = new RequestOptions({
+			headers
+		});
 
-};
+		return this.http.post('/widgets', JSON.stringify(widget), requestOptions)
+			.map(res => res.json()).toPromise<Widget>();
+	}
+
+}
 
 
 @Component({
-	selector: 'main',
-	template: `<form novalidate [formGroup]="contactForm">
-
-		<div>
-			<label for="first-name">First Name</label>
-			<input type="text" id="first-name" formControlName="firstName">
-		</div>
-
-		<div>
-			<label for="last-name">Last Name</label>
-			<input type="text" id="last-name" formControlName="lastName">
-		</div>
-
-		<fieldset formGroupName="contactDetails">
-	
-			<div>
-				<label for="email">Email</label>
-				<input type="text" id="email" formControlName="email">
-			</div>
-		
-			<div>
-				<label for="phone">Phone</label>
-				<input type="text" id="phone" formControlName="phone">
-			</div>
-
-		</fieldset>
-
-		<button type="button" (click)="send()">Send</button>
-
-	</form>`,
-	styles: [ 'input.ng-invalid { border: 1px solid red; }' ]
+	selector:'main',
+	template: `{{numberCounter | async}}<ul><li *ngFor="let widget of widgets">{{widget.name}}</li></ul>
+	<input type="text" #newMake (keyup.enter)="addMake(newMake.value)">`,
+	providers: [Counter]
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
 
-	contactForm: FormGroup;
+	widgets: Widget[]
 
-	constructor(private fb: FormBuilder) { }
+	numberCounter: Observable<number>;
 
-	ngOnInit() {
+	constructor(private cars: Cars, private counter: Counter) {
+		//this.makes = this.cars.getAllMakes();
 
-		this.contactForm = this.fb.group({
-			firstName: ['', [ Validators.required, Validators.minLength(3) ] ],
-			lastName: [ '', null, [ makeValidator ] ],
-			contactDetails: this.fb.group({
-				email: [ '', emailValidator ],
-				phone: ''
-			})
+		this.cars.getAll().subscribe(widgets => {
+			this.widgets = widgets;
 		});
+
+		this.cars.insert(<Widget>{
+			name: 'Test Test Test'
+		}).then(() => this.cars.getAll())
+		.then(widgets => { });
+
+		this.numberCounter = this.counter.getCounter();
+
+		this.numberCounter.subscribe(n => console.log(n));
+
 	}
 
-
-	send() {
-	
-		const contact = {
-			firstName: this.contactForm.get(['firstName']).value,
-			lastName: this.contactForm.get(['lastName']).value,
-			emailAddress: this.contactForm.get(['contactDetails','email']).value,
-			phoneNumber: this.contactForm.get(['contactDetails','phone']).value
-		};
-
-		console.dir(contact);
+	addMake(newMake: string) {
+		console.log('add new make: ' + newMake);
+		this.cars.addMake(newMake);
 	}
 
 }

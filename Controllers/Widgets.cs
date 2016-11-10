@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -6,7 +9,7 @@ using Training4Developers.Models;
 
 namespace Training4Developers.Controllers
 {
-	[Authorize]
+	//[Authorize]
 	[Route("[controller]")]
 	public class Widgets : Controller
 	{
@@ -18,9 +21,10 @@ namespace Training4Developers.Controllers
 		}
 
 		[HttpGet]
-		public IActionResult Get()
+		public IEnumerable<IWidget> Get()
 		{
-			return new ObjectResult(_widgetRepo.GetAll());
+			//return new ObjectResult(_widgetRepo.GetAll());
+			return _widgetRepo.GetAll();
 		}
 
 		[HttpGet("{widgetId}", Name="GetWidget")]
