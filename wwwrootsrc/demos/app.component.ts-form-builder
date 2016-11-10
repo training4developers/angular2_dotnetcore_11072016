@@ -18,35 +18,6 @@ const emailValidator = (fc: FormControl) : any => {
 	return null;
 };
 
-const makeValidator = (fc: FormControl) : Promise<{ [key: string]: any }> => {
-
-	const makes: string[] = [
-		'Ford','Chevrolet','Nissan','Toyota','Kia'
-	];
-
-	return new Promise<{ [key: string]: any }>((resolve, reject) => {
-
-		setTimeout(function() {
-
-			if (makes.filter(m => m === fc.value).length === 0) {
-				console.log('invalid');
-				resolve({
-					makeExists: false
-				});
-			} else {
-				console.log('valid');
-				resolve(null);
-			}
-
-
-		}, 1000);
-
-
-	});
-
-};
-
-
 @Component({
 	selector: 'main',
 	template: `<form novalidate [formGroup]="contactForm">
@@ -77,8 +48,7 @@ const makeValidator = (fc: FormControl) : Promise<{ [key: string]: any }> => {
 
 		<button type="button" (click)="send()">Send</button>
 
-	</form>`,
-	styles: [ 'input.ng-invalid { border: 1px solid red; }' ]
+	</form>`
 })
 export class AppComponent implements OnInit {
 
@@ -90,7 +60,7 @@ export class AppComponent implements OnInit {
 
 		this.contactForm = this.fb.group({
 			firstName: ['', [ Validators.required, Validators.minLength(3) ] ],
-			lastName: [ '', null, [ makeValidator ] ],
+			lastName: '',
 			contactDetails: this.fb.group({
 				email: [ '', emailValidator ],
 				phone: ''
